@@ -41,11 +41,25 @@ depends() {
 
 install() {
   
-  ## Set dropbear_port if key generated manually
-  [[ -z "${dropbear_port}" ]] && dropbear_port=2222
-  
   ## Check for dracut.conf parameters
-  [[ -z "${dropbear_acl}" ]] && dropbear_acl="${moddir}/authorized_keys"
+  [[ -z "${dropbear_port}" ]] && {
+    dinfo "dropbear_port not set in dracut.conf, using default (2222)"
+    dropbear_port=2222
+  }
+  
+  [[ -z "${dropbear_rsa_key}" ]] && {
+    
+    ## I assume ssh-keygen does a better job of producing good RSA keys than
+    ## dropbearkey, so use that one. It's interactive-only, hence some hacks.
+    dinfo "dropbear_rsa_key not set in dracut.conf, using default (${moddir}/dropbear_rsa_host_key)"
+    dropbear_rsa_key="${moddir}/dropbear_rsa_host_key"
+    
+  }
+  
+  [[ -z "${dropbear_acl}" ]] && {
+    dinfo "dropbear_acl not set in dracut.conf, using default location (/root/.ssh/authorized_keys)"
+    dropbear_acl="${moddir}/authorized_keys"
+  }
 
   ## Find and set temporary directory for install files
   local tmp=$(mktemp -d --tmpdir dracut-crypt-sshd.XXXX)
@@ -55,7 +69,7 @@ install() {
   dracut_install pkill
   dracut_install setterm
   dracut_install /lib64/libnss_files.so.2
-  dracut_install netstat  ## For checking dropbear is working
+  dracut_install netstat  #For checking dropbear is working on the correct port
   
   ## Copy/Install dropbear and console_peek into the initramfs image
   ## Modules directory variable should point to /lib/dracut/modules.d/60dropbear-sshd
@@ -66,20 +80,9 @@ install() {
   ## Don't bother with a Digital Signature Algorithm (DSA) key because the algorithm is weaker than RSA.
   ## Check if the dropbear_rsa_key variable has been set, otherwise create a new key pair using ssh-keygen and 
   ## convert to the format dropbear uses
-  [[ -z "${dropbear_rsa_key}" ]] && {
-    
-    ## I assume ssh-keygen does a better job of producing good RSA keys than
-    ## dropbearkey, so use that one. It's interactive-only, hence some hacks.
-    dinfo "Variable dropbear_rsa_key not set in dracut.conf."
-    dropbear_rsa_key="${moddir}/dropbear_rsa_host_key"
-    
-    dinfo "Generating authorized_keys file from ${dropbear_rsa_key}"
-    dropbearkey -y -f "${dropbear_rsa_key}" | grep "^ssh-rsa " >> authorized_keys
-    [[ -f "${dropbear_rsa_key}" ]] || {
-      dfatal "Failed to generate ad-hoc rsa key"
-      return 255
-    }
-    
+  [[ -f "${dropbear_rsa_key}" ]] || {
+    dfatal "Failed to generate ad-hoc rsa key"
+    return 255
   }
   
   dinfo "Dropbear boot key parameters:"
