@@ -19,6 +19,13 @@ fairly similar to openssh).
 ## Changes
 This module can be used with existing ssh keys or can generate new keys
 
+Before starting, convert previous ssh keys to dropbear format
+  dropbearconvert openssh dropbear /etc/ssh/ssh_host_rsa_key dropbear_rsa_host_key
+or
+  dropbear ...
+
+
+
 ### Usage
 
 First of all, needs dropbear (at least sshd, I tested only version built without

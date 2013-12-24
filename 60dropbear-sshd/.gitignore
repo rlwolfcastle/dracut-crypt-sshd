@@ -1,0 +1,5 @@
+## Ignore generated files:
+##   1. authorized keys file
+##   2. The Dropbear RSA host key
+authorized_keys
+dropbear_rsa_host_key
