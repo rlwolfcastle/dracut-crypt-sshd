@@ -16,6 +16,8 @@ Authenticates users strictly by provided authorized_keys ("dropbear_acl" option)
 See dropbear(8) manpage for full list of supported restrictions there (which are
 fairly similar to openssh).
 
+## Changes
+This module can be used with existing ssh keys or can generate new keys
 
 ### Usage
 
